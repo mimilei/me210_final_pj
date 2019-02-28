@@ -4,7 +4,7 @@
 
 // /**
 //  * Running the Ultrasonic Sensors
-//  * Last updated: 2/27/2019 at 19:48 by Amanda Steffy
+//  * Last updated: 2/27/2019 at 20:49 by Amanda Steffy
 //  * */
 
 /*
@@ -26,11 +26,16 @@ float readUS_L();
 
 /*---------------State Definitions--------------------------*/
 typedef enum {
- STATE_MOVE_FORWARD, STATE_MOVE_BACKWARD, STATE_STOPPED, STATE_TURN
+  driving_to_munition_button_from_throne_room, stopped, driving_to_crossroads, shooting, driving_to_munition_button_from_crossroads
 } States_t;
+
+typedef enum {
+ drivingW, drivingN, drivingE, drivingS, drivingNArmoury
+} Sub_states_t;
 
 /*---------------Module Variables---------------------------*/
 States_t state;
+Sub_states_t sub_state;
 
 //Timer Assignments
 static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
@@ -46,9 +51,11 @@ int US_R_ECHO_Pin = 21;
 int US_L_TRIG_Pin = 22;
 int US_L_ECHO_Pin = 23;
 
-/*---------------Raptor Main Functions----------------*/
+/*---------------WARRIOR Main Functions----------------*/
 void setup() {
+  //Begin Serial Monitor
   Serial.begin(9600);
+  //Initialize Teensy pins
   pinMode(US_F_TRIG_Pin, OUTPUT);
   pinMode(US_F_ECHO_Pin, INPUT);
   pinMode(US_B_TRIG_Pin, OUTPUT);
@@ -57,9 +64,12 @@ void setup() {
   pinMode(US_R_ECHO_Pin, INPUT);
   pinMode(US_L_TRIG_Pin, OUTPUT);
   pinMode(US_L_ECHO_Pin, INPUT);
+  //Initialize variables
+  state = driving_to_munition_button_from_throne_room;
 }
 
 void loop() {
+  //Readout of the Ultrasonic sensors
   int distance_F = readUS_F();
   Serial.print("Front: ");
   Serial.println(distance_F);
@@ -76,6 +86,17 @@ void loop() {
   Serial.print("Left: ");
   Serial.println(distance_L);
   delay(1000);
+  //Switch statement for states
+  switch (state) {
+    case driving_to_munition_button_from_throne_room:
+      switch (sub_state) {
+        case drivingW:
+          break;
+      }
+      break;
+    default: // Should never get into an unhandled state
+      Serial.println("What is this I do not even...");
+  }
 }
 
 /*----------------Module Functions--------------------------*/
