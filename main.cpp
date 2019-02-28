@@ -32,22 +32,22 @@ void driveS();
 void driveE();
 void stopMotors();
 //Obstacle testing and response
-void testForWObstacle();
+uint8_t testForWObstacle();
 void respToWObstacle();
-void testForNObstacle();
+uint8_t testForNObstacle();
 void respToNObstacle();
-void testForEObstacle();
+uint8_t testForEObstacle();
 void respToEObstacle();
 void respToMunitionButton();
 //Crossroads testing and response
-void testForCenter();
+uint8_t testForCenter();
 void respToCenter();
 //Shooter start
 void startShooter();
 //Timer testings and response
-void testForMunitionTimer();
+uint8_t testForMunitionTimer();
 void respToMunitionTimer();
-void testForShooterTimer();
+uint8_t testForShooterTimer();
 void respToShooterTimer();
 
 /*---------------State Definitions--------------------------*/
@@ -95,6 +95,7 @@ void setup() {
 }
 
 void loop() {
+  /*
   //Readout of the Ultrasonic sensors
   int distance_F = readUS_F();
   Serial.print("Front: ");
@@ -112,6 +113,11 @@ void loop() {
   Serial.print("Left: ");
   Serial.println(distance_L);
   delay(1000);
+  */
+  //Testing in the loop
+  if (testForWObstacle()) respToWObstacle();
+  if (testForNObstacle()) respToNObstacle();
+  if (testForEObstacle()) respToEObstacle();
   //Switch statement for states
   switch (state) {
     case driving_to_munition_button_from_throne_room:
@@ -253,28 +259,43 @@ void stopMotors(){
   //TODO
 }
 
-void testForWObstacle() {
-  //TODO
+uint8_t testForWObstacle() {
+  float US_L = readUS_L();
+	if (US_L < 5) return 1;
+  else return 0; //UPDATE AFTER TEST
 }
+
 void respToWObstacle() {
   //TODO
+  Serial.println("W Obstacle Detected!");
 }
-void testForNObstacle() {
+
+uint8_t testForNObstacle() {
   //TODO
+  float US_F = readUS_F();
+	if (US_F < 5) return 1;
+  else return 0; //UPDATE AFTER TEST
 }
+
 void respToNObstacle() {
   //TODO
+  Serial.println("N Obstacle Detected!");
 }
-void testForEObstacle() {
+
+uint8_t testForEObstacle() {
   //TODO
+  float US_R = readUS_R();
+	if (US_R < 5) return 1;
+  else return 0; //UPDATE AFTER TEST
 }
 void respToEObstacle() {
   //TODO
+  Serial.println("E Obstacle Detected!");
 }
 void respToMunitionButton() {
   //TODO
 }
-void testForCenter() {
+uint8_t testForCenter() {
   //TODO
 }
 void respToCenter() {
@@ -283,13 +304,13 @@ void respToCenter() {
 void startShooter() {
   //TODO
 }
-void testForMunitionTimer() {
+uint8_t testForMunitionTimer() {
   //TODO
 }
 void respToMunitionTimer() {
   //TODO
 }
-void testForShooterTimer() {
+uint8_t testForShooterTimer() {
   //TODO
 }
 void respToShooterTimer() {
