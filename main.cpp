@@ -1,75 +1,152 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
+#include <Metro.h>
 
 // /**
-//  * Driving the shooter motors
-//  * Last updated: 2/23/2019 at 18:00 by Amanda Steffy
+//  * Running the Ultrasonic Sensors
+//  * Last updated: 2/27/2019 at 19:48 by Amanda Steffy
 //  * */
 
-// // Method headers
-void setHigh(void);
-void setLow(void);
-void calculateDutyCycle(void);
+/*
+Nice to have:
+ - combine readUS_N into single function with variable
+*/
 
-// // Global variables
-int pwmOutPin = 10; //Motor 1 Enable Pin 
-//int potInPin = 16;
-int directionPin = 9; //Motor 1 Direction Pin
-int directionState = HIGH; //Motor Direction State
-int pwmOutPin_2 = 4; //Motor 2 Enable Pin
-int directionPin2 = 3; //Motor 2 Direction State
-bool keyPressed = false;
+/*---------------Module Defines-----------------------------*/
+//Munition Loading Time
+#define MUNITION_TIME_INTERVAL 5000
+//Shooting time for six wildfires
+#define SHOOTER_TIME_INTERVAL 8000
 
-// IntervalTimer highTimer;
-float timePerPeriod = 1./10000; // For 1kHz
-float highTimerInterval = timePerPeriod*pow(10,6); // For 1 kHz frequency
-IntervalTimer lowTimer;
-volatile float lowTimerInterval = timePerPeriod/2*pow(10,6); // microseconds
+/*---------------Module Function Prototypes-----------------*/
+float readUS_F();
+float readUS_B();
+float readUS_R();
+float readUS_L();
 
-uint8_t TestForKey(void) {
- uint8_t KeyEventOccurred;
- KeyEventOccurred = Serial.available();
- return KeyEventOccurred;
-}
+/*---------------State Definitions--------------------------*/
+typedef enum {
+ STATE_MOVE_FORWARD, STATE_MOVE_BACKWARD, STATE_STOPPED, STATE_TURN
+} States_t;
 
-void KeyPressed(void) {
- uint8_t theKey;
- Serial.println("key pressed");
- theKey = Serial.read();
- if (directionState == HIGH) {
-   directionState = LOW;
- } else {
-   directionState = HIGH;
- }
-}
+/*---------------Module Variables---------------------------*/
+States_t state;
 
+//Timer Assignments
+static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
+static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
+
+// Pin Assignments
+int US_F_TRIG_Pin = 16;
+int US_F_ECHO_Pin = 17;
+int US_B_TRIG_Pin = 18;
+int US_B_ECHO_Pin = 19;
+int US_R_TRIG_Pin = 20;
+int US_R_ECHO_Pin = 21;
+int US_L_TRIG_Pin = 22;
+int US_L_ECHO_Pin = 23;
+
+/*---------------Raptor Main Functions----------------*/
 void setup() {
   Serial.begin(9600);
-  pinMode(pwmOutPin, OUTPUT);
-  pinMode(directionPin, OUTPUT);
-  pinMode(pwmOutPin_2, OUTPUT);
-  pinMode(directionPin2,OUTPUT);
-  digitalWrite(directionPin, HIGH);
-  digitalWrite(directionPin2, HIGH);
-  analogWrite(pwmOutPin, 255);
+  pinMode(US_F_TRIG_Pin, OUTPUT);
+  pinMode(US_F_ECHO_Pin, INPUT);
+  pinMode(US_B_TRIG_Pin, OUTPUT);
+  pinMode(US_B_ECHO_Pin, INPUT);
+  pinMode(US_R_TRIG_Pin, OUTPUT);
+  pinMode(US_R_ECHO_Pin, INPUT);
+  pinMode(US_L_TRIG_Pin, OUTPUT);
+  pinMode(US_L_ECHO_Pin, INPUT);
 }
 
 void loop() {
-  //Serial.println("In loop");
-  //int potIn = analogRead(potInPin);
-  //Set duty cycle to 50%
-  int dutyCycle = 255;
-  analogWrite(pwmOutPin, dutyCycle);
-  analogWrite(pwmOutPin_2, dutyCycle);
-  if (TestForKey()) KeyPressed();
-  /*if (Serial.available() > 0) {
-    Serial.println("Inverting direction");
-    digitalWrite(directionPin, directionState);
-    if (directionState == HIGH) {
-      directionState = LOW;
-    } else {
-      directionState = HIGH;
-    }
-    Serial.read();
-  }*/
+  int distance_F = readUS_F();
+  Serial.print("Front: ");
+  Serial.println(distance_F);
+  delay(1000);
+  int distance_B = readUS_B();
+  Serial.print("Back: ");
+  Serial.println(distance_B);
+  delay(1000);
+  int distance_R = readUS_R();
+  Serial.print("Right: ");
+  Serial.println(distance_R);
+  delay(1000);
+  int distance_L = readUS_L();
+  Serial.print("Left: ");
+  Serial.println(distance_L);
+  delay(1000);
+}
+
+/*----------------Module Functions--------------------------*/
+float readUS_F(){
+  // Trigger sensor to send pulse
+  digitalWrite(US_F_TRIG_Pin, LOW);
+  delayMicroseconds(5); //Note: blocking code
+  digitalWrite(US_F_TRIG_Pin, HIGH);
+  delayMicroseconds(10); //Note: blocking code
+  digitalWrite(US_F_TRIG_Pin, LOW);
+
+  //Read the feedback
+  unsigned long duration;
+  duration = pulseIn(US_F_ECHO_Pin, HIGH);
+
+  //Convert feedback to distance
+  long cm;
+  cm = (duration/2) / 29.1;
+  return cm;
+}
+
+float readUS_B(){
+  // Trigger sensor to send pulse
+  digitalWrite(US_B_TRIG_Pin, LOW);
+  delayMicroseconds(5); //Note: blocking code
+  digitalWrite(US_B_TRIG_Pin, HIGH);
+  delayMicroseconds(10); //Note: blocking code
+  digitalWrite(US_B_TRIG_Pin, LOW);
+
+  //Read the feedback
+  unsigned long duration;
+  duration = pulseIn(US_B_ECHO_Pin, HIGH);
+
+  //Convert feedback to distance
+  long cm;
+  cm = (duration/2) / 29.1;
+  return cm;
+}
+
+float readUS_R(){
+  // Trigger sensor to send pulse
+  digitalWrite(US_R_TRIG_Pin, LOW);
+  delayMicroseconds(5); 
+  digitalWrite(US_R_TRIG_Pin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(US_R_TRIG_Pin, LOW);
+
+  //Read the feedback
+  unsigned long duration;
+  duration = pulseIn(US_R_ECHO_Pin, HIGH);
+
+  //Convert feedback to distance
+  long cm;
+  cm = (duration/2) / 29.1;
+  return cm;
+}
+
+float readUS_L(){
+  // Trigger sensor to send pulse
+  digitalWrite(US_L_TRIG_Pin, LOW);
+  delayMicroseconds(5); //Note: blocking code
+  digitalWrite(US_L_TRIG_Pin, HIGH);
+  delayMicroseconds(10); //Note: blocking code
+  digitalWrite(US_L_TRIG_Pin, LOW);
+
+  //Read the feedback
+  unsigned long duration;
+  duration = pulseIn(US_L_ECHO_Pin, HIGH);
+
+  //Convert feedback to distance
+  long cm;
+  cm = (duration/2) / 29.1;
+  return cm;
 }
