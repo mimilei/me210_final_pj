@@ -16,7 +16,7 @@ void nextState(void);
 
 // State Definitions
 typedef enum {
-  DRIVE_NORTH, DRIVE_EAST, DRIVE_SOUTH, DRIVE_WEST, STOP // TO FINISH FILLING OUT
+  STOP, DRIVE_NORTH, DRIVE_EAST, DRIVE_SOUTH, DRIVE_WEST  // TO FINISH FILLING OUT
 } States_t;
 
 // Global variables
@@ -26,9 +26,9 @@ int pwmEastWest = 17;
 // must have opposing polarity for the motor to run.
 int dirPin1 = 3;
 int dirPin2 = 4;
-int maxSpeedMotor = 255;
+int maxSpeedMotor = 200;
 int stopSpeedMotor = 0;
-int motorTestInterval = 5000;  // Milliseconds.
+int motorTestInterval = 1000;  // Milliseconds.
 
 States_t driveState;
 static Metro motorTimer = Metro(motorTestInterval);
@@ -48,6 +48,7 @@ void setup() {
 }
 
 void loop() {
+  
   if (motorTimerExpired()) nextState();
 }
 
@@ -55,15 +56,23 @@ void nextState() {
   switch (driveState) {
     case STOP:
       driveState = DRIVE_NORTH;
+      driveNorth();
       break;
     case DRIVE_NORTH:
       driveState = DRIVE_EAST;
+      driveEast();
       break;
     case DRIVE_EAST:
+      driveState = DRIVE_WEST;
+      driveWest();
+      break;
+    case DRIVE_WEST:
       driveState = DRIVE_SOUTH;
+      driveSouth();
       break;
     case DRIVE_SOUTH:
       driveState = STOP;
+      driveStop();
       break;
     default:
       break;
