@@ -10,6 +10,7 @@
 /*
 Nice to have:
  - combine readUS_N into single function with variable
+ - cleaner way to handle substates
 */
 
 /*---------------Module Defines-----------------------------*/
@@ -19,10 +20,35 @@ Nice to have:
 #define SHOOTER_TIME_INTERVAL 8000
 
 /*---------------Module Function Prototypes-----------------*/
+//Ultrasonic sensor read functions
 float readUS_F();
 float readUS_B();
 float readUS_R();
 float readUS_L();
+//Drive functions
+void driveW();
+void driveN();
+void driveS();
+void driveE();
+void stopMotors();
+//Obstacle testing and response
+void testForWObstacle();
+void respToWObstacle();
+void testForNObstacle();
+void respToNObstacle();
+void testForEObstacle();
+void respToEObstacle();
+void respToMunitionButton();
+//Crossroads testing and response
+void testForCenter();
+void respToCenter();
+//Shooter start
+void startShooter();
+//Timer testings and response
+void testForMunitionTimer();
+void respToMunitionTimer();
+void testForShooterTimer();
+void respToShooterTimer();
 
 /*---------------State Definitions--------------------------*/
 typedef enum {
@@ -130,7 +156,7 @@ void loop() {
           //TODO
           break;
         default:
-          Serial.println("I'm stuck in a driving_to_munition_button_from_crossroads!");
+          Serial.println("I'm stuck in a driving_to_munition_button_from_crossroads nested state!");
       }
       break;
     default: // Should never get into an unhandled state
@@ -209,4 +235,63 @@ float readUS_L(){
   long cm;
   cm = (duration/2) / 29.1;
   return cm;
+}
+
+void driveW(){
+  //TODO
+}
+void driveN(){
+  //TODO
+}
+void driveS(){
+  //TODO
+}
+void driveE(){
+  //TODO
+}
+void stopMotors(){
+  //TODO
+}
+
+void testForWObstacle() {
+  //TODO
+}
+void respToWObstacle() {
+  //TODO
+}
+void testForNObstacle() {
+  //TODO
+}
+void respToNObstacle() {
+  //TODO
+}
+void testForEObstacle() {
+  //TODO
+}
+void respToEObstacle() {
+  //TODO
+}
+void respToMunitionButton() {
+  //TODO
+}
+void testForCenter() {
+  //TODO
+}
+void respToCenter() {
+  //TODO
+}
+void startShooter() {
+  //TODO
+}
+void testForMunitionTimer() {
+  //TODO
+}
+void respToMunitionTimer() {
+  //TODO
+}
+void testForShooterTimer() {
+  //TODO
+}
+void respToShooterTimer() {
+  //TODO
 }
