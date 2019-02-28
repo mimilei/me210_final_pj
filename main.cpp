@@ -4,7 +4,7 @@
 
 // /**
 //  * Running the Ultrasonic Sensors
-//  * Last updated: 2/27/2019 at 20:49 by Amanda Steffy
+//  * Last updated: 2/27/2019 at 21:05 by Amanda Steffy
 //  * */
 
 /*
@@ -91,7 +91,46 @@ void loop() {
     case driving_to_munition_button_from_throne_room:
       switch (sub_state) {
         case drivingW:
+          //TODO
           break;
+        case drivingNArmoury:
+          //TODO
+          break;
+        default:
+          Serial.println("I'm stuck in a driving_to_munition_button_from_throne_room nested state!");
+      }
+      break;
+    case stopped:
+      //TODO
+      break;
+    case driving_to_crossroads:
+      switch (sub_state) {
+        case drivingE:
+          //TODO
+          break;
+        case drivingS:
+          //TODO
+          break;
+        default: 
+          Serial.println("I'm stuck in a driving_to_crossroads nested state!");
+      }
+      break;
+    case shooting:
+      //TODO
+      break;
+    case driving_to_munition_button_from_crossroads:
+      switch (sub_state) {
+        case drivingN:
+          //TODO
+          break;
+        case drivingW:
+          //TODO
+          break;
+        case drivingNArmoury:
+          //TODO
+          break;
+        default:
+          Serial.println("I'm stuck in a driving_to_munition_button_from_crossroads!");
       }
       break;
     default: // Should never get into an unhandled state
