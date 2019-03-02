@@ -4,7 +4,7 @@
 
 // /**
 //  * WARRIOR Code
-//  * Last updated: 3/2/2019 at 12:55 by Amanda Steffy
+//  * Last updated: 3/2/2019 at 14:41 by Amanda Steffy
 //  * */
 
 /*
@@ -68,6 +68,10 @@ static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
 static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
 
 // Pin Assignments
+int shooter_enable1 = 2;
+int shooter_dir1 = 3;
+int shooter_dir2 = 4;
+int shooter_enable2 = 5;
 int pwmNorthSouth = 6; //UPDATED from Drivetrain code
 int pwmEastWest = 10; //UPDATED from Drivetrain code
 int dirPin1 = 11; //UPDATED from Drivetrain code, On the L298N motor driver, there are two direction pins per motor and they must have opposing polarity for the motor to run.
@@ -82,14 +86,19 @@ int US_L_TRIG_Pin = 22;
 int US_L_ECHO_Pin = 23;
 
 //Motor Settings
-int maxSpeedMotor = 200;
+int maxSpeedMotor = 255; //HELP! SHOULD THIS BE 200? Letti got it to work at 200 but not higher
 int stopSpeedMotor = 0;
+//int shooterDirState = LOW;
 
 /*---------------WARRIOR Main Functions----------------*/
 void setup() {
   //Begin Serial Monitor
   Serial.begin(9600);
   //Initialize Teensy pins
+  pinMode(shooter_enable1, OUTPUT);
+  pinMode(shooter_dir1, OUTPUT);
+  pinMode(shooter_dir2, OUTPUT);
+  pinMode(shooter_enable2, OUTPUT);
   pinMode(pwmNorthSouth, OUTPUT);
   pinMode(pwmEastWest, OUTPUT);
   pinMode(dirPin1, OUTPUT);
@@ -102,8 +111,12 @@ void setup() {
   pinMode(US_R_ECHO_Pin, INPUT);
   pinMode(US_L_TRIG_Pin, OUTPUT);
   pinMode(US_L_ECHO_Pin, INPUT);
-  //Initialize pin settings
-  analogWrite(pwmNorthSouth, maxSpeedMotor);
+  //Initialize motor pin settings
+  digitalWrite(shooter_dir1, LOW);
+  digitalWrite(shooter_dir2, LOW);
+  analogWrite(shooter_enable1, stopSpeedMotor);
+  analogWrite(shooter_enable2, stopSpeedMotor);
+  analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor);
   digitalWrite(dirPin1, HIGH);
   digitalWrite(dirPin2, LOW);
@@ -360,10 +373,12 @@ void respToCenter() {
   state = shooting;
 }
 void startShooter() {
-  //TODO
-  //Serial.println("FIRE!");
-  //start_shooter_motor1
-  //start_shooter_motor2
+  //TODO: test
+  Serial.println("FIRE!");
+  digitalWrite(shooter_dir1, HIGH);
+  digitalWrite(shooter_dir2, HIGH);
+  analogWrite(shooter_enable1, maxSpeedMotor);
+  analogWrite(shooter_enable2, maxSpeedMotor);
 }
 uint8_t testForMunitionTimer() {
   return (uint8_t) munition_timer.check();
@@ -377,10 +392,12 @@ uint8_t testForShooterTimer() {
   return (uint8_t) shooter_timer.check();
 }
 void respToShooterTimer() {
-  //TODO
+  //TODO: test
   Serial.println("Shooting timer has expired!");
-  //stop_shooter_motor1
-  //stop_shooter_motor2
+  digitalWrite(shooter_dir1, LOW);
+  digitalWrite(shooter_dir2, LOW);
+  analogWrite(shooter_enable1, stopSpeedMotor);
+  analogWrite(shooter_enable2, stopSpeedMotor); 
   state = driving_to_munition_button_from_crossroads;
   sub_state = drivingN;
 }
