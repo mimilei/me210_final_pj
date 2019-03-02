@@ -3,8 +3,8 @@
 #include <Metro.h>
 
 // /**
-//  * Running the Ultrasonic Sensors
-//  * Last updated: 2/27/2019 at 21:05 by Amanda Steffy
+//  * WARRIOR Code
+//  * Last updated: 3/2/2019 at 12:34 by Amanda Steffy
 //  * */
 
 /*
@@ -92,6 +92,7 @@ void setup() {
   pinMode(US_L_ECHO_Pin, INPUT);
   //Initialize variables
   state = driving_to_munition_button_from_throne_room;
+  sub_state = drivingW;
 }
 
 void loop() {
@@ -100,33 +101,35 @@ void loop() {
   int distance_F = readUS_F();
   Serial.print("Front: ");
   Serial.println(distance_F);
-  delay(1000);
+  delay(500);
   int distance_B = readUS_B();
   Serial.print("Back: ");
   Serial.println(distance_B);
-  delay(1000);
+  delay(500);
   int distance_R = readUS_R();
   Serial.print("Right: ");
   Serial.println(distance_R);
-  delay(1000);
+  delay(500);
   int distance_L = readUS_L();
   Serial.print("Left: ");
   Serial.println(distance_L);
-  delay(1000);
-  */
+  delay(500);*/
+  
   //Testing in the loop
-  if (testForWObstacle()) respToWObstacle();
-  if (testForNObstacle()) respToNObstacle();
-  if (testForEObstacle()) respToEObstacle();
+
   //Switch statement for states
   switch (state) {
     case driving_to_munition_button_from_throne_room:
       switch (sub_state) {
         case drivingW:
           //TODO
+          //driveW();
+          if (testForWObstacle()) respToWObstacle();
           break;
         case drivingNArmoury:
           //TODO
+          //driveN();
+          if (testForNObstacle()) respToMunitionButton();
           break;
         default:
           Serial.println("I'm stuck in a driving_to_munition_button_from_throne_room nested state!");
@@ -134,14 +137,20 @@ void loop() {
       break;
     case stopped:
       //TODO
+      //stopMotors();
+      if (testForMunitionTimer()) respToMunitionTimer();
       break;
     case driving_to_crossroads:
       switch (sub_state) {
         case drivingE:
           //TODO
+          //driveE();
+          if (testForEObstacle()) respToEObstacle();
           break;
         case drivingS:
           //TODO
+          //driveS();
+	        if (testForCenter()) respToCenter();
           break;
         default: 
           Serial.println("I'm stuck in a driving_to_crossroads nested state!");
@@ -149,17 +158,26 @@ void loop() {
       break;
     case shooting:
       //TODO
+      //stopMotors();
+      startShooter();
+      if (testForShooterTimer()) respToShooterTimer();
       break;
     case driving_to_munition_button_from_crossroads:
       switch (sub_state) {
         case drivingN:
           //TODO
+          //driveN();
+		      if (testForNObstacle()) respToNObstacle();
           break;
         case drivingW:
           //TODO
+          //driveW();
+          if (testForWObstacle()) respToWObstacle();
           break;
         case drivingNArmoury:
           //TODO
+          //driveN();
+          if (testForNObstacle()) respToMunitionButton();
           break;
         default:
           Serial.println("I'm stuck in a driving_to_munition_button_from_crossroads nested state!");
@@ -266,53 +284,68 @@ uint8_t testForWObstacle() {
 }
 
 void respToWObstacle() {
-  //TODO
   Serial.println("W Obstacle Detected!");
+  sub_state = drivingNArmoury;
 }
 
 uint8_t testForNObstacle() {
-  //TODO
   float US_F = readUS_F();
 	if (US_F < 5) return 1;
   else return 0; //UPDATE AFTER TEST
 }
 
 void respToNObstacle() {
-  //TODO
   Serial.println("N Obstacle Detected!");
+  sub_state = drivingW;
 }
 
 uint8_t testForEObstacle() {
-  //TODO
   float US_R = readUS_R();
 	if (US_R < 5) return 1;
   else return 0; //UPDATE AFTER TEST
 }
 void respToEObstacle() {
-  //TODO
   Serial.println("E Obstacle Detected!");
+  sub_state = drivingS;
 }
 void respToMunitionButton() {
-  //TODO
+  munition_timer.reset();
+  state = stopped;
+  Serial.println("Responding to Munition Button!");
 }
 uint8_t testForCenter() {
-  //TODO
+  float US_F = readUS_F();
+	float US_B = readUS_B();
+	if (US_F == US_B) return 1;
+  else return 0;
 }
 void respToCenter() {
-  //TODO
+  Serial.println("WARRIOR is at the Center");
+  shooter_timer.reset();
+  state = shooting;
 }
 void startShooter() {
   //TODO
+  //Serial.println("FIRE!");
+  //start_shooter_motor1
+  //start_shooter_motor2
 }
 uint8_t testForMunitionTimer() {
-  //TODO
+  return (uint8_t) munition_timer.check();
 }
 void respToMunitionTimer() {
-  //TODO
+  Serial.println("Munition timer has expired!");
+  state = driving_to_crossroads;
+  sub_state = drivingE;
 }
 uint8_t testForShooterTimer() {
-  //TODO
+  return (uint8_t) shooter_timer.check();
 }
 void respToShooterTimer() {
   //TODO
+  Serial.println("Shooting timer has expired!");
+  //stop_shooter_motor1
+  //stop_shooter_motor2
+  state = driving_to_munition_button_from_crossroads;
+  sub_state = drivingN;
 }
