@@ -4,7 +4,7 @@
 
 // /**
 //  * WARRIOR Code
-//  * Last updated: 3/2/2019 at 12:34 by Amanda Steffy
+//  * Last updated: 3/2/2019 at 12:55 by Amanda Steffy
 //  * */
 
 /*
@@ -68,6 +68,10 @@ static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
 static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
 
 // Pin Assignments
+int pwmNorthSouth = 6; //UPDATED from Drivetrain code
+int pwmEastWest = 10; //UPDATED from Drivetrain code
+int dirPin1 = 11; //UPDATED from Drivetrain code, On the L298N motor driver, there are two direction pins per motor and they must have opposing polarity for the motor to run.
+int dirPin2 = 12; //UPDATED from Drivetrain code
 int US_F_TRIG_Pin = 16;
 int US_F_ECHO_Pin = 17;
 int US_B_TRIG_Pin = 18;
@@ -77,11 +81,19 @@ int US_R_ECHO_Pin = 21;
 int US_L_TRIG_Pin = 22;
 int US_L_ECHO_Pin = 23;
 
+//Motor Settings
+int maxSpeedMotor = 200;
+int stopSpeedMotor = 0;
+
 /*---------------WARRIOR Main Functions----------------*/
 void setup() {
   //Begin Serial Monitor
   Serial.begin(9600);
   //Initialize Teensy pins
+  pinMode(pwmNorthSouth, OUTPUT);
+  pinMode(pwmEastWest, OUTPUT);
+  pinMode(dirPin1, OUTPUT);
+  pinMode(dirPin2, OUTPUT);
   pinMode(US_F_TRIG_Pin, OUTPUT);
   pinMode(US_F_ECHO_Pin, INPUT);
   pinMode(US_B_TRIG_Pin, OUTPUT);
@@ -90,6 +102,11 @@ void setup() {
   pinMode(US_R_ECHO_Pin, INPUT);
   pinMode(US_L_TRIG_Pin, OUTPUT);
   pinMode(US_L_ECHO_Pin, INPUT);
+  //Initialize pin settings
+  analogWrite(pwmNorthSouth, maxSpeedMotor);
+  analogWrite(pwmEastWest, stopSpeedMotor);
+  digitalWrite(dirPin1, HIGH);
+  digitalWrite(dirPin2, LOW);
   //Initialize variables
   state = driving_to_munition_button_from_throne_room;
   sub_state = drivingW;
@@ -122,13 +139,13 @@ void loop() {
     case driving_to_munition_button_from_throne_room:
       switch (sub_state) {
         case drivingW:
-          //TODO
-          //driveW();
+          //TODO: test driveW
+          driveW();
           if (testForWObstacle()) respToWObstacle();
           break;
         case drivingNArmoury:
-          //TODO
-          //driveN();
+          //TODO: test driveN
+          driveN();
           if (testForNObstacle()) respToMunitionButton();
           break;
         default:
@@ -136,20 +153,20 @@ void loop() {
       }
       break;
     case stopped:
-      //TODO
-      //stopMotors();
+      //TODO: test stopMotors
+      stopMotors();
       if (testForMunitionTimer()) respToMunitionTimer();
       break;
     case driving_to_crossroads:
       switch (sub_state) {
         case drivingE:
-          //TODO
-          //driveE();
+          //TODO: test driveE
+          driveE();
           if (testForEObstacle()) respToEObstacle();
           break;
         case drivingS:
-          //TODO
-          //driveS();
+          //TODO: test driveS
+          driveS();
 	        if (testForCenter()) respToCenter();
           break;
         default: 
@@ -157,26 +174,26 @@ void loop() {
       }
       break;
     case shooting:
-      //TODO
-      //stopMotors();
+      //TODO: test stopMotors
+      stopMotors();
       startShooter();
       if (testForShooterTimer()) respToShooterTimer();
       break;
     case driving_to_munition_button_from_crossroads:
       switch (sub_state) {
         case drivingN:
-          //TODO
-          //driveN();
+          //TODO: test driveN
+          driveN();
 		      if (testForNObstacle()) respToNObstacle();
           break;
         case drivingW:
-          //TODO
-          //driveW();
+          //TODO: test driveW
+          driveW();
           if (testForWObstacle()) respToWObstacle();
           break;
         case drivingNArmoury:
-          //TODO
-          //driveN();
+          //TODO: test driveN
+          driveN();
           if (testForNObstacle()) respToMunitionButton();
           break;
         default:
@@ -262,19 +279,37 @@ float readUS_L(){
 }
 
 void driveW(){
-  //TODO
+  //TODO: test
+  digitalWrite(dirPin1, LOW);
+  digitalWrite(dirPin2, HIGH);
+  analogWrite(pwmNorthSouth, stopSpeedMotor);
+  analogWrite(pwmEastWest, maxSpeedMotor); 
 }
 void driveN(){
-  //TODO
+  //TODO: test
+  digitalWrite(dirPin1, HIGH);
+  digitalWrite(dirPin2, LOW);
+  analogWrite(pwmNorthSouth, maxSpeedMotor);
+  analogWrite(pwmEastWest, stopSpeedMotor); 
 }
 void driveS(){
-  //TODO
+  //TODO: test
+  digitalWrite(dirPin1, LOW);
+  digitalWrite(dirPin2, HIGH);
+  analogWrite(pwmNorthSouth, maxSpeedMotor);
+  analogWrite(pwmEastWest, stopSpeedMotor); 
 }
 void driveE(){
-  //TODO
+  //TODO: test
+  digitalWrite(dirPin1, HIGH);
+  digitalWrite(dirPin2, LOW);
+  analogWrite(pwmNorthSouth, stopSpeedMotor);
+  analogWrite(pwmEastWest, maxSpeedMotor); 
 }
 void stopMotors(){
-  //TODO
+  //TODO: test
+  analogWrite(pwmNorthSouth, stopSpeedMotor);
+  analogWrite(pwmEastWest, stopSpeedMotor);
 }
 
 uint8_t testForWObstacle() {
