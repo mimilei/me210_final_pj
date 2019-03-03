@@ -4,7 +4,7 @@
 
 // /**
 //  * WARRIOR Code
-//  * Last updated: 3/2/2019 at 21:03 by Letti Kittel
+//  * Last updated: 3/2/2019 at 21:23 by Letti Kittel
 //  * */
 
 /*
@@ -15,10 +15,12 @@ NOTES FROM LETTI'S TESTING:
   hitting the munition button). Potential solutions:
     - Add a "WestObstacle" component to the "hit munition button" criteria.
     And if US_F > US_R, move West, (and whatever else you'd need to do)
-- My USB cable uploads code to the Teensy in ~2 s.  I'll put a sticky note
-  on it so Amanda doesn't waste any more significants portions of her life. ;)
 - Enemy ammunition may cause similar problems (but that would involve a decent
   amount of bad luck and is more than MVP).
+- My USB cable uploads code to the Teensy in ~2 s.  I'll put a sticky note
+  on it so Amanda doesn't waste any more significants portions of her life. ;)
+- The "middle of the board" state is broken. TBD why. --> a wire was hanging
+  down in front of the front US.  WE NEED CABLE MANAGEMENT!
 */
 
 /*
@@ -32,8 +34,8 @@ Nice to have:
 #define MUNITION_TIME_INTERVAL 5000
 //Shooting time for six wildfires
 #define SHOOTER_TIME_INTERVAL 8000
-// Quick delay before changing drive direction
-#define QUICK_STOP_INTERVAL 100
+// Print out serial US data at a human consumable rate
+#define SERIAL_PRINT_INTERVAL 500
 
 /*---------------Module Function Prototypes-----------------*/
 //Ultrasonic sensor read functions
@@ -84,7 +86,7 @@ Sub_states_t sub_state;
 //Timer Assignments
 static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
 static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
-static Metro quick_stop_timer = Metro(QUICK_STOP_INTERVAL);
+static Metro serial_print_timer = Metro(SERIAL_PRINT_INTERVAL);
 
 // Pin Assignments
 int shooter_enable1 = 2;
@@ -113,7 +115,7 @@ int stopSpeedMotor = 0;
 // Ultrasonic Sensor Obstacle Detection Parameters
 int northObstacleThreshold = 5;
 int eastObstacleThreshold = 5;
-int westObstacleThreshold = 5;
+int westObstacleThreshold = 10;
 int southernWallFromMunitionButton = 200;
 // TODO (letti): Add a south obstacle threshold just in case...
 
@@ -157,22 +159,20 @@ void setup() {
 void loop() {
   
   //Readout of the Ultrasonic sensors
-  int distance_F = readUS_F();
-  Serial.print("Front: ");
-  Serial.println(distance_F);
-  delay(500);
-  int distance_B = readUS_B();
-  Serial.print("Back: ");
-  Serial.println(distance_B);
-  delay(500);
-  int distance_R = readUS_R();
-  Serial.print("Right: ");
-  Serial.println(distance_R);
-  delay(500);
-  int distance_L = readUS_L();
-  Serial.print("Left: ");
-  Serial.println(distance_L);
-  delay(500);
+  if (serial_print_timer.check()) {
+    int distance_F = readUS_F();
+    Serial.print("Front: ");
+    Serial.println(distance_F);
+    int distance_B = readUS_B();
+    Serial.print("Back: ");
+    Serial.println(distance_B);
+    int distance_R = readUS_R();
+    Serial.print("Right: ");
+    Serial.println(distance_R);
+    int distance_L = readUS_L();
+    Serial.print("Left: ");
+    Serial.println(distance_L);
+  }
   
   //Drivetrain Testing
   /*
