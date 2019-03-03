@@ -21,6 +21,10 @@ NOTES FROM LETTI'S TESTING:
   on it so Amanda doesn't waste any more significants portions of her life. ;)
 - The "middle of the board" state is broken. TBD why. --> a wire was hanging
   down in front of the front US.  WE NEED CABLE MANAGEMENT!
+- Need to add a "west" component to the munition criteria. It needs to be in 
+  the armory and we have a tendacy to veer east when travelling north.
+    - "If US_L < 7, drive LEFT; else stop;"
+    - Done. Semi tested.
 */
 
 /*
@@ -359,8 +363,16 @@ void respToEObstacle() {
 uint8_t testForMunitionButton() {
   float US_F = readUS_F();
   float US_B = readUS_B();
+  float US_L = readUS_L();
   if ((US_B > southernWallFromMunitionButton) && (US_F < northObstacleThreshold)) {
+    // Ensure that we are in the corner and well within the bounds of the armoury.
+    if (US_L > 7) {
+      driveE();
+      delay(50);  // blocking code. TO BE REPLACED.
+    }
     driveN();
+    // Ultrasonic sensors can be less than accurate. This delay is to ensure we 
+    // continue driving north and hit the munition button.
     delay(200); //blocking code
     return 1;
   }
