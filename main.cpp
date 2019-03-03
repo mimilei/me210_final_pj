@@ -4,8 +4,22 @@
 
 // /**
 //  * WARRIOR Code
-//  * Last updated: 3/2/2019 at 18:57 by Amanda Steffy
+//  * Last updated: 3/2/2019 at 21:03 by Letti Kittel
 //  * */
+
+/*
+NOTES FROM LETTI'S TESTING:
+  - Fallen parts of Casterly rock are messing with our ulstrasonic senros.
+  If we hit the munition button at an angle the back sensor may see that 
+  instead of the back wall (which is currently part of our criteria for 
+  hitting the munition button). Potential solutions:
+    - Add a "WestObstacle" component to the "hit munition button" criteria.
+    And if US_F > US_R, move West, (and whatever else you'd need to do)
+- My USB cable uploads code to the Teensy in ~2 s.  I'll put a sticky note
+  on it so Amanda doesn't waste any more significants portions of her life. ;)
+- Enemy ammunition may cause similar problems (but that would involve a decent
+  amount of bad luck and is more than MVP).
+*/
 
 /*
 Nice to have:
@@ -18,6 +32,8 @@ Nice to have:
 #define MUNITION_TIME_INTERVAL 5000
 //Shooting time for six wildfires
 #define SHOOTER_TIME_INTERVAL 8000
+// Quick delay before changing drive direction
+#define QUICK_STOP_INTERVAL 100
 
 /*---------------Module Function Prototypes-----------------*/
 //Ultrasonic sensor read functions
@@ -50,6 +66,7 @@ uint8_t testForMunitionTimer();
 void respToMunitionTimer();
 uint8_t testForShooterTimer();
 void respToShooterTimer();
+long convertFeedbackToDistance(unsigned long);
 
 /*---------------State Definitions--------------------------*/
 typedef enum {
@@ -67,6 +84,7 @@ Sub_states_t sub_state;
 //Timer Assignments
 static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
 static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
+static Metro quick_stop_timer = Metro(QUICK_STOP_INTERVAL);
 
 // Pin Assignments
 int shooter_enable1 = 2;
@@ -75,7 +93,9 @@ int shooter_dir2 = 4;
 int shooter_enable2 = 5;
 int pwmNorthSouth = 6; //UPDATED from Drivetrain code
 int pwmEastWest = 10; //UPDATED from Drivetrain code
-int dirPin1 = 11; //UPDATED from Drivetrain code, On the L298N motor driver, there are two direction pins per motor and they must have opposing polarity for the motor to run.
+// On the L298N motor driver, there are two direction pins per motor and they 
+// must have opposing polarity for the motor to run.
+int dirPin1 = 11; //UPDATED from Drivetrain code, 
 int dirPin2 = 12; //UPDATED from Drivetrain code
 int US_F_TRIG_Pin = 16;
 int US_F_ECHO_Pin = 17;
@@ -87,8 +107,17 @@ int US_L_TRIG_Pin = 22;
 int US_L_ECHO_Pin = 23;
 
 //Motor Settings
-int maxSpeedMotor = 255; //HELP! SHOULD THIS BE 200? Letti got it to work at 200 but not higher
+int maxSpeedMotor = 255;
 int stopSpeedMotor = 0;
+
+// Ultrasonic Sensor Obstacle Detection Parameters
+int northObstacleThreshold = 5;
+int eastObstacleThreshold = 5;
+int westObstacleThreshold = 5;
+int southernWallFromMunitionButton = 200;
+// TODO (letti): Add a south obstacle threshold just in case...
+
+long cm;
 
 /*---------------WARRIOR Main Functions----------------*/
 void setup() {
@@ -238,11 +267,7 @@ float readUS_F(){
   //Read the feedback
   unsigned long duration;
   duration = pulseIn(US_F_ECHO_Pin, HIGH);
-
-  //Convert feedback to distance
-  long cm;
-  cm = (duration/2) / 29.1;
-  return cm;
+  return convertFeedbackToDistance(duration);
 }
 
 float readUS_B(){
@@ -256,11 +281,7 @@ float readUS_B(){
   //Read the feedback
   unsigned long duration;
   duration = pulseIn(US_B_ECHO_Pin, HIGH);
-
-  //Convert feedback to distance
-  long cm;
-  cm = (duration/2) / 29.1;
-  return cm;
+  return convertFeedbackToDistance(duration);
 }
 
 float readUS_R(){
@@ -274,11 +295,7 @@ float readUS_R(){
   //Read the feedback
   unsigned long duration;
   duration = pulseIn(US_R_ECHO_Pin, HIGH);
-
-  //Convert feedback to distance
-  long cm;
-  cm = (duration/2) / 29.1;
-  return cm;
+  return convertFeedbackToDistance(duration);
 }
 
 float readUS_L(){
@@ -292,9 +309,11 @@ float readUS_L(){
   //Read the feedback
   unsigned long duration;
   duration = pulseIn(US_L_ECHO_Pin, HIGH);
+ return convertFeedbackToDistance(duration);
+}
 
-  //Convert feedback to distance
-  long cm;
+long convertFeedbackToDistance(unsigned long duration) {
+  // TODO(Amanda): Add a comment describing the 29.1 value.
   cm = (duration/2) / 29.1;
   return cm;
 }
@@ -303,7 +322,7 @@ void driveW(){
   digitalWrite(dirPin1, LOW);
   digitalWrite(dirPin2, HIGH);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
-  analogWrite(pwmEastWest, maxSpeedMotor); 
+  analogWrite(pwmEastWest, maxSpeedMotor);
 }
 void driveN(){
   digitalWrite(dirPin1, HIGH);
@@ -330,7 +349,7 @@ void stopMotors(){
 
 uint8_t testForWObstacle() {
   float US_L = readUS_L();
-	if (US_L < 5) return 1;
+	if (US_L < eastObstacleThreshold) return 1;
   else return 0; //UPDATE AFTER TEST
 }
 
@@ -342,7 +361,7 @@ void respToWObstacle() {
 
 uint8_t testForNObstacle() {
   float US_F = readUS_F();
-	if (US_F < 5) return 1;
+	if (US_F < northObstacleThreshold) return 1;
   else return 0; //UPDATE AFTER TEST
 }
 
@@ -354,7 +373,7 @@ void respToNObstacle() {
 
 uint8_t testForEObstacle() {
   float US_R = readUS_R();
-	if (US_R < 5) return 1;
+	if (US_R < eastObstacleThreshold) return 1;
   else return 0; //UPDATE AFTER TEST
 }
 void respToEObstacle() {
@@ -365,7 +384,7 @@ void respToEObstacle() {
 uint8_t testForMunitionButton() {
   float US_F = readUS_F();
   float US_B = readUS_B();
-  if ((US_B > 200) && (US_F < 5)) {
+  if ((US_B > southernWallFromMunitionButton) && (US_F < northObstacleThreshold)) {
     driveN();
     delay(200); //blocking code
     return 1;
@@ -375,7 +394,7 @@ uint8_t testForMunitionButton() {
 void respToMunitionButton() {
   munition_timer.reset();
   driveS();
-  delay(300); //blocking code
+  delay(50); //blocking code
   state = stopped;
   Serial.println("Responding to Munition Button!");
 }
