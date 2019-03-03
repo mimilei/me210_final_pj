@@ -256,60 +256,35 @@ void loop() {
 }
 
 /*----------------Module Functions--------------------------*/
-float readUS_F(){
+
+float readUS (int trigPin, int echoPin) {
   // Trigger sensor to send pulse
-  digitalWrite(US_F_TRIG_Pin, LOW);
+  digitalWrite(trigPin, LOW);
   delayMicroseconds(5); 
-  digitalWrite(US_F_TRIG_Pin, HIGH);
+  digitalWrite(trigPin, HIGH);
   delayMicroseconds(10); 
-  digitalWrite(US_F_TRIG_Pin, LOW);
+  digitalWrite(trigPin, LOW);
 
   //Read the feedback
   unsigned long duration;
-  duration = pulseIn(US_F_ECHO_Pin, HIGH);
+  duration = pulseIn(echoPin, HIGH);
   return convertFeedbackToDistance(duration);
+}
+
+float readUS_F(){
+  return readUS(US_F_TRIG_Pin, US_F_ECHO_Pin);
 }
 
 float readUS_B(){
-  // Trigger sensor to send pulse
-  digitalWrite(US_B_TRIG_Pin, LOW);
-  delayMicroseconds(5); 
-  digitalWrite(US_B_TRIG_Pin, HIGH);
-  delayMicroseconds(10); 
-  digitalWrite(US_B_TRIG_Pin, LOW);
-
-  //Read the feedback
-  unsigned long duration;
-  duration = pulseIn(US_B_ECHO_Pin, HIGH);
-  return convertFeedbackToDistance(duration);
+  return readUS(US_B_TRIG_Pin, US_B_ECHO_Pin);
 }
 
 float readUS_R(){
-  // Trigger sensor to send pulse
-  digitalWrite(US_R_TRIG_Pin, LOW);
-  delayMicroseconds(5); 
-  digitalWrite(US_R_TRIG_Pin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(US_R_TRIG_Pin, LOW);
-
-  //Read the feedback
-  unsigned long duration;
-  duration = pulseIn(US_R_ECHO_Pin, HIGH);
-  return convertFeedbackToDistance(duration);
+  return readUS(US_R_TRIG_Pin, US_R_ECHO_Pin);
 }
 
 float readUS_L(){
-  // Trigger sensor to send pulse
-  digitalWrite(US_L_TRIG_Pin, LOW);
-  delayMicroseconds(5); 
-  digitalWrite(US_L_TRIG_Pin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(US_L_TRIG_Pin, LOW);
-
-  //Read the feedback
-  unsigned long duration;
-  duration = pulseIn(US_L_ECHO_Pin, HIGH);
- return convertFeedbackToDistance(duration);
+  return readUS(US_L_TRIG_Pin, US_L_ECHO_Pin);
 }
 
 long convertFeedbackToDistance(unsigned long duration) {
