@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
 #include <Metro.h>
+#include <Servo.h>
 
-// /**
-//  * WARRIOR Code
-//  * Last updated: 3/2/2019 at 21:23 by Letti Kittel
-//  * */
+/**
+ * Welcome to the inner workings of the ***FIENDFYRE WARRIOR*** 
+ * Last updated: 3/3/2019 at ? by Michelle Chang
+ * */
 
 /*
 NOTES FROM LETTI'S TESTING:
@@ -38,6 +39,10 @@ Nice to have:
 #define MUNITION_TIME_INTERVAL 5000
 //Shooting time for six wildfires
 #define SHOOTER_TIME_INTERVAL 8000
+// Time between ball releases
+#define SHOOTER_BALL_INTERVAL 1000000
+// Time between gate open/close
+#define BALL_GATE_INTERVAL 90000
 // Print out serial US data at a human consumable rate
 #define SERIAL_PRINT_INTERVAL 500
 
@@ -67,6 +72,8 @@ uint8_t testForCenter();
 void respToCenter();
 //Shooter start
 void startShooter();
+// "Open and shut" the ball gater servo
+void trigger_ball_gate();
 //Timer testings and response
 uint8_t testForMunitionTimer();
 void respToMunitionTimer();
@@ -92,17 +99,23 @@ static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
 static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
 static Metro serial_print_timer = Metro(SERIAL_PRINT_INTERVAL);
 
+// Shooter Objects
+Servo ball_gater;
+volatile int gate_state = 0; // Open or closed
+IntervalTimer gate_timer;
+
 // Pin Assignments
 int shooter_enable1 = 2;
 int shooter_dir1 = 3;
 int shooter_dir2 = 4;
 int shooter_enable2 = 5;
-int pwmNorthSouth = 6; //UPDATED from Drivetrain code
-int pwmEastWest = 10; //UPDATED from Drivetrain code
+int gater_servo_pin = 7; // Servo motor that blocks balls from going through
+int pwmNorthSouth = 6; 
+int pwmEastWest = 10;
 // On the L298N motor driver, there are two direction pins per motor and they 
 // must have opposing polarity for the motor to run.
-int dirPin1 = 11; //UPDATED from Drivetrain code, 
-int dirPin2 = 12; //UPDATED from Drivetrain code
+int dir_pin_1 = 11; 
+int dir_pin_2 = 12; 
 int US_F_TRIG_Pin = 16;
 int US_F_ECHO_Pin = 17;
 int US_B_TRIG_Pin = 18;
@@ -134,10 +147,11 @@ void setup() {
   pinMode(shooter_dir1, OUTPUT);
   pinMode(shooter_dir2, OUTPUT);
   pinMode(shooter_enable2, OUTPUT);
+  pinMode(gater_servo_pin, OUTPUT);
   pinMode(pwmNorthSouth, OUTPUT);
   pinMode(pwmEastWest, OUTPUT);
-  pinMode(dirPin1, OUTPUT);
-  pinMode(dirPin2, OUTPUT);
+  pinMode(dir_pin_1, OUTPUT);
+  pinMode(dir_pin_2, OUTPUT);
   pinMode(US_F_TRIG_Pin, OUTPUT);
   pinMode(US_F_ECHO_Pin, INPUT);
   pinMode(US_B_TRIG_Pin, OUTPUT);
@@ -153,11 +167,13 @@ void setup() {
   analogWrite(shooter_enable2, stopSpeedMotor);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor);
-  digitalWrite(dirPin1, HIGH);
-  digitalWrite(dirPin2, LOW);
+  digitalWrite(dir_pin_1, HIGH);
+  digitalWrite(dir_pin_2, LOW);
   //Initialize variables
   state = driving_to_munition_button_from_throne_room;
   sub_state = drivingW;
+  ball_gater.attach(gater_servo_pin);
+  ball_gater.write(15);
 }
 
 void loop() {
@@ -300,26 +316,26 @@ long convertFeedbackToDistance(unsigned long duration) {
 }
 
 void driveW(){
-  digitalWrite(dirPin1, LOW);
-  digitalWrite(dirPin2, HIGH);
+  digitalWrite(dir_pin_1, LOW);
+  digitalWrite(dir_pin_2, HIGH);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, maxSpeedMotor);
 }
 void driveN(){
-  digitalWrite(dirPin1, HIGH);
-  digitalWrite(dirPin2, LOW);
+  digitalWrite(dir_pin_1, HIGH);
+  digitalWrite(dir_pin_2, LOW);
   analogWrite(pwmNorthSouth, maxSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor); 
 }
 void driveS(){
-  digitalWrite(dirPin1, LOW);
-  digitalWrite(dirPin2, HIGH);
+  digitalWrite(dir_pin_1, LOW);
+  digitalWrite(dir_pin_2, HIGH);
   analogWrite(pwmNorthSouth, maxSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor); 
 }
 void driveE(){
-  digitalWrite(dirPin1, HIGH);
-  digitalWrite(dirPin2, LOW);
+  digitalWrite(dir_pin_1, HIGH);
+  digitalWrite(dir_pin_2, LOW);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, maxSpeedMotor); 
 }
@@ -406,12 +422,12 @@ void respToCenter() {
 }
 void startShooter() {
   //TODO: test
-  Serial.println("FIRE!");
-  //TODO: add release code for the release mechanism
+  Serial.println("Open fire!");
   digitalWrite(shooter_dir1, HIGH);
   digitalWrite(shooter_dir2, HIGH);
   analogWrite(shooter_enable1, maxSpeedMotor);
   analogWrite(shooter_enable2, maxSpeedMotor);
+  gate_timer.begin(trigger_ball_gate, BALL_GATE_INTERVAL);
 }
 uint8_t testForMunitionTimer() {
   return (uint8_t) munition_timer.check();
@@ -426,10 +442,23 @@ uint8_t testForShooterTimer() {
 }
 void respToShooterTimer() {
   Serial.println("Shooting timer has expired!");
+  gate_timer.end();
   digitalWrite(shooter_dir1, LOW);
   digitalWrite(shooter_dir2, LOW);
   analogWrite(shooter_enable1, stopSpeedMotor);
   analogWrite(shooter_enable2, stopSpeedMotor); 
   state = driving_to_munition_button_from_crossroads;
   sub_state = drivingN;
+}
+
+void trigger_ball_gate() {
+  if (gate_state == 0) {
+    ball_gater.write(15);
+    gate_state = 1;
+    gate_timer.update(BALL_GATE_INTERVAL);
+  } else {
+    ball_gater.write(35);
+    gate_state = 0;
+    gate_timer.update(SHOOTER_BALL_INTERVAL);
+  }
 }
