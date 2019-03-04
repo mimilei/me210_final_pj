@@ -174,10 +174,13 @@ void setup() {
   sub_state = drivingW;
   ball_gater.attach(gater_servo_pin);
   ball_gater.write(15);
+
+  Serial.println("SETUP COMPLETE");
+
 }
 
 void loop() {
-  
+  /*
   //Readout of the Ultrasonic sensors
   if (serial_print_timer.check()) {
     int distance_F = readUS_F();
@@ -192,9 +195,7 @@ void loop() {
     int distance_L = readUS_L();
     Serial.print("Left: ");
     Serial.println(distance_L);
-  }
-  // Shooter Testing
-  startShooter();
+  }*/
   //Drivetrain Testing
   /*
   driveW();
@@ -213,6 +214,7 @@ void loop() {
   delay(500);
   stopMotors();
   delay(500);*/
+  
   
   //Switch statement for states
   switch (state) {
@@ -249,8 +251,7 @@ void loop() {
       }
       break;
     case shooting:
-      stopMotors();
-      startShooter();
+
       if (testForShooterTimer()) respToShooterTimer();
       break;
     case driving_to_munition_button_from_crossroads:
@@ -353,6 +354,7 @@ uint8_t testForWObstacle() {
 void respToWObstacle() {
   Serial.println("W Obstacle Detected!");
   stopMotors();
+  delay(100);
   sub_state = drivingNArmoury;
 }
 
@@ -365,6 +367,7 @@ uint8_t testForNObstacle() {
 void respToNObstacle() {
   Serial.println("N Obstacle Detected!");
   stopMotors();
+  delay(100);
   sub_state = drivingW;
 }
 
@@ -376,6 +379,7 @@ uint8_t testForEObstacle() {
 void respToEObstacle() {
   Serial.println("E Obstacle Detected!");
   stopMotors();
+  delay(100);
   sub_state = drivingS;
 }
 uint8_t testForMunitionButton() {
@@ -399,7 +403,7 @@ uint8_t testForMunitionButton() {
 void respToMunitionButton() {
   munition_timer.reset();
   stopMotors();
-  delay(50); //to help with a clean transition
+  delay(100); //to help with a clean transition
   driveS();
   delay(500); //blocking code
   state = stopped;
@@ -418,7 +422,10 @@ void respToCenter() {
   //driveW(); //to back off the wall
   //delay(300); //blocking code. TODO
   shooter_timer.reset();
+  Serial.println("STARITNG TO SHOOT");
   state = shooting;
+  stopMotors();
+  startShooter();
 }
 void startShooter() {
   //TODO: test
@@ -427,7 +434,9 @@ void startShooter() {
   digitalWrite(shooter_dir2, HIGH);
   analogWrite(shooter_enable1, maxSpeedMotor);
   analogWrite(shooter_enable2, maxSpeedMotor);
+  Serial.println("Starting Gate timer");
   gate_timer.begin(trigger_ball_gate, BALL_GATE_INTERVAL);
+  Serial.println("Gate timer started");
 }
 uint8_t testForMunitionTimer() {
   return (uint8_t) munition_timer.check();
@@ -452,6 +461,7 @@ void respToShooterTimer() {
 }
 
 void trigger_ball_gate() {
+  Serial.println("entered trigger_ball_gate");
   if (gate_state == 0) {
     ball_gater.write(15);
     gate_state = 1;
