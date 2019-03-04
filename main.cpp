@@ -452,8 +452,8 @@ uint8_t testForShooterTimer() {
 void respToShooterTimer() {
   Serial.println("Shooting timer has expired!");
   gate_timer.end();
-  digitalWrite(shooter_dir1, HIGH);
-  digitalWrite(shooter_dir2, HIGH);
+  // digitalWrite(shooter_dir1, HIGH);
+  // digitalWrite(shooter_dir2, HIGH);
   analogWrite(shooter_enable1, stopSpeedMotor);
   analogWrite(shooter_enable2, stopSpeedMotor); 
   state = driving_to_munition_button_from_crossroads;
