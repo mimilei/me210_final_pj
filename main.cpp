@@ -168,10 +168,12 @@ void setup() {
   pinMode(US_L_TRIG_Pin, OUTPUT);
   pinMode(US_L_ECHO_Pin, INPUT);
   //Initialize motor pin settings
-  analogWrite(shooter_enable1, stopSpeedMotor);
-  analogWrite(shooter_enable2, stopSpeedMotor);
-  digitalWrite(shooter_dir1, LOW);
-  digitalWrite(shooter_dir2, LOW);
+  digitalWrite(shooter_enable1, LOW);
+  digitalWrite(shooter_enable2, LOW);
+  // analogWrite(shooter_enable1, stopSpeedMotor);
+  // analogWrite(shooter_enable2, stopSpeedMotor);
+  digitalWrite(shooter_dir1, HIGH);
+  digitalWrite(shooter_dir2, HIGH);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor);
   digitalWrite(dir_pin_1, HIGH);
@@ -442,8 +444,10 @@ void startShooter() {
   Serial.println("Open fire!");
   digitalWrite(shooter_dir1, LOW);
   digitalWrite(shooter_dir2, HIGH);
-  analogWrite(shooter_enable1, maxSpeedMotor);
-  analogWrite(shooter_enable2, maxSpeedMotor);
+  digitalWrite(shooter_enable1, HIGH);
+  digitalWrite(shooter_enable2, HIGH);
+  // analogWrite(shooter_enable1, maxSpeedMotor);
+  // analogWrite(shooter_enable2, maxSpeedMotor);
   Serial.println("Starting Gate timer");
   gate_timer.begin(trigger_ball_gate, BALL_GATE_INTERVAL);
   Serial.println("Gate timer started");
@@ -462,8 +466,10 @@ uint8_t testForShooterTimer() {
 void respToShooterTimer() {
   Serial.println("Shooting timer has expired!");
   gate_timer.end();
-  analogWrite(shooter_enable1, stopSpeedMotor);
-  analogWrite(shooter_enable2, stopSpeedMotor); 
+  digitalWrite(shooter_enable1, LOW);
+  digitalWrite(shooter_enable2, LOW);
+  // analogWrite(shooter_enable1, stopSpeedMotor);
+  // analogWrite(shooter_enable2, stopSpeedMotor); 
   state = driving_to_munition_button_from_crossroads;
   sub_state = drivingN;
 }
@@ -483,8 +489,10 @@ void trigger_ball_gate() {
 
 void shut_down() {
   stopMotors();
-  analogWrite(shooter_enable1, stopSpeedMotor);
-  analogWrite(shooter_enable2, stopSpeedMotor); 
+  digitalWrite(shooter_enable1, LOW);
+  digitalWrite(shooter_enable2, LOW);
+  // analogWrite(shooter_enable1, stopSpeedMotor);
+  // analogWrite(shooter_enable2, stopSpeedMotor); 
   state = end_game;
   gate_timer.end();
   end_game_timer.end();
