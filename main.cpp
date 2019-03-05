@@ -45,6 +45,8 @@ Nice to have:
 #define BALL_GATE_INTERVAL 90000
 // Print out serial US data at a human consumable rate
 #define SERIAL_PRINT_INTERVAL 500
+// Game ends after 2 minutes and 10 seconds
+#define END_GAME_TIME 130000000
 
 /*---------------Module Function Prototypes-----------------*/
 //Ultrasonic sensor read functions
@@ -80,10 +82,12 @@ void respToMunitionTimer();
 uint8_t testForShooterTimer();
 void respToShooterTimer();
 long convertFeedbackToDistance(unsigned long);
+// Shut down all systems
+void shut_down();
 
 /*---------------State Definitions--------------------------*/
 typedef enum {
-  driving_to_munition_button_from_throne_room, stopped, driving_to_crossroads, shooting, driving_to_munition_button_from_crossroads
+  driving_to_munition_button_from_throne_room, stopped, driving_to_crossroads, shooting, driving_to_munition_button_from_crossroads, end_game
 } States_t;
 
 typedef enum {
@@ -104,13 +108,16 @@ Servo ball_gater;
 volatile int gate_state = 0; // Open or closed
 IntervalTimer gate_timer;
 
+// End game
+IntervalTimer end_game_timer;
+
 // Pin Assignments
 int shooter_enable1 = 2;
 int shooter_dir1 = 3;
 int shooter_dir2 = 4;
 int shooter_enable2 = 5;
 int gater_servo_pin = 7; // Servo motor that blocks balls from going through
-int pwmNorthSouth = 6; 
+int pwmNorthSouth = 6; // The pwm pins for each h-bridge should be plugged into the same pwm pin
 int pwmEastWest = 10;
 // On the L298N motor driver, there are two direction pins per motor and they 
 // must have opposing polarity for the motor to run.
@@ -161,10 +168,10 @@ void setup() {
   pinMode(US_L_TRIG_Pin, OUTPUT);
   pinMode(US_L_ECHO_Pin, INPUT);
   //Initialize motor pin settings
-  digitalWrite(shooter_dir1, LOW);
-  digitalWrite(shooter_dir2, LOW);
   analogWrite(shooter_enable1, stopSpeedMotor);
   analogWrite(shooter_enable2, stopSpeedMotor);
+  digitalWrite(shooter_dir1, LOW);
+  digitalWrite(shooter_dir2, LOW);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor);
   digitalWrite(dir_pin_1, HIGH);
@@ -174,6 +181,7 @@ void setup() {
   sub_state = drivingW;
   ball_gater.attach(gater_servo_pin);
   ball_gater.write(15);
+  end_game_timer.begin(shut_down, END_GAME_TIME);
 
   Serial.println("SETUP COMPLETE");
 
@@ -272,6 +280,8 @@ void loop() {
           Serial.println("I'm stuck in a driving_to_munition_button_from_crossroads nested state!");
       }
       break;
+    case end_game:
+      Serial.println("End game");
     default: // Should never get into an unhandled state
       Serial.println("What is this I do not even...");
   }
@@ -452,8 +462,6 @@ uint8_t testForShooterTimer() {
 void respToShooterTimer() {
   Serial.println("Shooting timer has expired!");
   gate_timer.end();
-  // digitalWrite(shooter_dir1, HIGH);
-  // digitalWrite(shooter_dir2, HIGH);
   analogWrite(shooter_enable1, stopSpeedMotor);
   analogWrite(shooter_enable2, stopSpeedMotor); 
   state = driving_to_munition_button_from_crossroads;
@@ -471,4 +479,13 @@ void trigger_ball_gate() {
     gate_state = 0;
     gate_timer.update(SHOOTER_BALL_INTERVAL);
   }
+}
+
+void shut_down() {
+  stopMotors();
+  analogWrite(shooter_enable1, stopSpeedMotor);
+  analogWrite(shooter_enable2, stopSpeedMotor); 
+  state = end_game;
+  gate_timer.end();
+  end_game_timer.end();
 }
