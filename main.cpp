@@ -5,7 +5,7 @@
 
 /**
  * Welcome to the inner workings of the ***FIENDFYRE WARRIOR*** 
- * Last updated: 3/5/2019 at 17:50 by Amanda Steffy
+ * Last updated: 3/5/2019 at 18:42 by Amanda Steffy
  * */
 
 /*
@@ -368,6 +368,15 @@ void respToWObstacle() {
   delay(100); //blocking code TODO
   driveW();
   delay(500); //blocking code TODO
+  // Back out of corner
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveN();
+  delay(400); //blocking code TODO
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveE();
+  delay(400); //blocking code TODO
   //
   stopMotors();
   delay(100);
@@ -403,6 +412,15 @@ void respToEObstacle() {
   delay(100); //blocking code TODO
   driveE();
   delay(500); //blocking code TODO
+  // Back out of corner
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveS();
+  delay(400); //blocking code TODO
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveW();
+  delay(400); //blocking code TODO
   //
   stopMotors();
   delay(100);
