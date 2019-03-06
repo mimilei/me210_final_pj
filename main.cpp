@@ -5,7 +5,7 @@
 
 /**
  * Welcome to the inner workings of the ***FIENDFYRE WARRIOR*** 
- * Last updated: 3/3/2019 at ? by Michelle Chang
+ * Last updated: 3/5/2019 at 17:50 by Amanda Steffy
  * */
 
 /*
@@ -359,6 +359,16 @@ uint8_t testForWObstacle() {
 
 void respToWObstacle() {
   Serial.println("W Obstacle Detected!");
+  //Drive into SW corner for alignment - TEST ME
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveS();
+  delay(500); //blocking code TODO
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveW();
+  delay(500); //blocking code TODO
+  //
   stopMotors();
   delay(100);
   sub_state = drivingNArmoury;
@@ -384,6 +394,16 @@ uint8_t testForEObstacle() {
 }
 void respToEObstacle() {
   Serial.println("E Obstacle Detected!");
+  //Drive into NE corner for alignment - TEST ME
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveN();
+  delay(500); //blocking code TODO
+  stopMotors();
+  delay(100); //blocking code TODO
+  driveE();
+  delay(500); //blocking code TODO
+  //
   stopMotors();
   delay(100);
   sub_state = drivingS;
@@ -423,12 +443,12 @@ uint8_t testForCenter() {
 }
 void respToCenter() {
   Serial.println("WARRIOR is at the Center");
-  //driveE(); //for better alignment, hit the E wall
-  //delay(300); //blocking code, but forces us into the E wall
-  //driveW(); //to back off the wall
-  //delay(300); //blocking code. TODO
+  driveE(); //for better alignment, hit the E wall
+  delay(300); //blocking code, but forces us into the E wall
+  driveW(); //to back off the wall
+  delay(300); //blocking code. TODO
   shooter_timer.reset();
-  Serial.println("STARITNG TO SHOOT");
+  Serial.println("STARTING TO SHOOT");
   state = shooting;
   stopMotors();
   startShooter();
