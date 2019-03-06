@@ -112,25 +112,23 @@ IntervalTimer gate_timer;
 IntervalTimer end_game_timer;
 
 // Pin Assignments
+int gater_servo_pin = 1; // Servo motor that blocks balls from going through
 int shooter_enable1 = 2;
-int shooter_dir1 = 3;
-int shooter_dir2 = 4;
-int shooter_enable2 = 5;
-int gater_servo_pin = 7; // Servo motor that blocks balls from going through
-int pwmNorthSouth = 6; // The pwm pins for each h-bridge should be plugged into the same pwm pin
-int pwmEastWest = 10;
+int shooter_enable2 = 3;
+int pwmNorthSouth = 4; // The pwm pins for each h-bridge should be plugged into the same pwm pin
+int pwmEastWest = 5;
 // On the L298N motor driver, there are two direction pins per motor and they 
 // must have opposing polarity for the motor to run.
-int dir_pin_1 = 11; 
-int dir_pin_2 = 12; 
-int US_F_TRIG_Pin = 16;
-int US_F_ECHO_Pin = 17;
-int US_B_TRIG_Pin = 18;
-int US_B_ECHO_Pin = 19;
-int US_R_TRIG_Pin = 20;
-int US_R_ECHO_Pin = 21;
-int US_L_TRIG_Pin = 22;
-int US_L_ECHO_Pin = 23;
+int dir_pin_1 = 10; 
+int dir_pin_2 = 11; 
+int US_B_ECHO_Pin = 16;
+int US_B_TRIG_Pin = 17;
+int US_L_ECHO_Pin = 18;
+int US_L_TRIG_Pin = 19;
+int US_R_ECHO_Pin = 20;
+int US_R_TRIG_Pin = 21;
+int US_F_ECHO_Pin = 22;
+int US_F_TRIG_Pin = 23;
 
 //Motor Settings
 int maxSpeedMotor = 255;
@@ -151,8 +149,6 @@ void setup() {
   Serial.begin(9600);
   //Initialize Teensy pins
   pinMode(shooter_enable1, OUTPUT);
-  pinMode(shooter_dir1, OUTPUT);
-  pinMode(shooter_dir2, OUTPUT);
   pinMode(shooter_enable2, OUTPUT);
   pinMode(gater_servo_pin, OUTPUT);
   pinMode(pwmNorthSouth, OUTPUT);
@@ -172,8 +168,6 @@ void setup() {
   digitalWrite(shooter_enable2, LOW);
   // analogWrite(shooter_enable1, stopSpeedMotor);
   // analogWrite(shooter_enable2, stopSpeedMotor);
-  digitalWrite(shooter_dir1, HIGH);
-  digitalWrite(shooter_dir2, HIGH);
   analogWrite(pwmNorthSouth, stopSpeedMotor);
   analogWrite(pwmEastWest, stopSpeedMotor);
   digitalWrite(dir_pin_1, HIGH);
@@ -442,12 +436,8 @@ void respToCenter() {
 void startShooter() {
   //TODO: test
   Serial.println("Open fire!");
-  digitalWrite(shooter_dir1, LOW);
-  digitalWrite(shooter_dir2, HIGH);
   digitalWrite(shooter_enable1, HIGH);
   digitalWrite(shooter_enable2, HIGH);
-  // analogWrite(shooter_enable1, maxSpeedMotor);
-  // analogWrite(shooter_enable2, maxSpeedMotor);
   Serial.println("Starting Gate timer");
   gate_timer.begin(trigger_ball_gate, BALL_GATE_INTERVAL);
   Serial.println("Gate timer started");
