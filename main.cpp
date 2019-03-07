@@ -135,9 +135,9 @@ int maxSpeedMotor = 255;
 int stopSpeedMotor = 0;
 
 // Ultrasonic Sensor Obstacle Detection Parameters
-int northObstacleThreshold = 5;
-int eastObstacleThreshold = 5;
-int westObstacleThreshold = 10;
+int northObstacleThreshold = 6;
+int eastObstacleThreshold = 4;
+int westObstacleThreshold = 4;
 int southernWallFromMunitionButton = 200;
 // TODO (letti): Add a south obstacle threshold just in case...
 
@@ -178,16 +178,16 @@ void setup() {
   ball_gater.attach(gater_servo_pin);
   ball_gater.write(15);
   end_game_timer.begin(shut_down, END_GAME_TIME);
-
+  delay(10000); //wait 3 secs
   Serial.println("SETUP COMPLETE");
 
 }
 
 void loop() {
-  /*
+  
   //Readout of the Ultrasonic sensors
   if (serial_print_timer.check()) {
-    int distance_F = readUS_F();
+    /*int distance_F = readUS_F();
     Serial.print("Front: ");
     Serial.println(distance_F);
     int distance_B = readUS_B();
@@ -198,8 +198,8 @@ void loop() {
     Serial.println(distance_R);
     int distance_L = readUS_L();
     Serial.print("Left: ");
-    Serial.println(distance_L);
-  }*/
+    Serial.println(distance_L);*/
+  }
   //Drivetrain Testing
   /*
   driveW();
@@ -217,8 +217,8 @@ void loop() {
   driveS();
   delay(500);
   stopMotors();
-  delay(500);*/
-  
+  delay(500);
+  */
   
   //Switch statement for states
   switch (state) {
@@ -280,7 +280,7 @@ void loop() {
       Serial.println("End game");
     default: // Should never get into an unhandled state
       Serial.println("What is this I do not even...");
-  }
+  }              
 }
 
 /*----------------Module Functions--------------------------*/
@@ -352,8 +352,10 @@ void stopMotors(){
 }
 
 uint8_t testForWObstacle() {
+  //Serial.println("W Obstacle Tested");
   float US_L = readUS_L();
-	if (US_L < eastObstacleThreshold) return 1;
+  Serial.println(US_L);
+	if (US_L < westObstacleThreshold) return 1;
   else return 0; 
 }
 
@@ -369,14 +371,6 @@ void respToWObstacle() {
   driveW();
   delay(500); //blocking code TODO
   // Back out of corner
-  stopMotors();
-  delay(100); //blocking code TODO
-  driveN();
-  delay(400); //blocking code TODO
-  stopMotors();
-  delay(100); //blocking code TODO
-  driveE();
-  delay(400); //blocking code TODO
   //
   stopMotors();
   delay(100);
@@ -411,7 +405,7 @@ void respToEObstacle() {
   stopMotors();
   delay(100); //blocking code TODO
   driveE();
-  delay(500); //blocking code TODO
+  delay(300); //blocking code TODO
   // Back out of corner
   stopMotors();
   delay(100); //blocking code TODO
