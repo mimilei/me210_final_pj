@@ -139,6 +139,7 @@ int northObstacleThreshold = 6;
 int eastObstacleThreshold = 4;
 int westObstacleThreshold = 4;
 int southernWallFromMunitionButton = 200;
+int westObstacleMunitionTreshold = 7;
 // TODO (letti): Add a south obstacle threshold just in case...
 
 long cm;
@@ -426,7 +427,7 @@ uint8_t testForMunitionButton() {
   float US_L = readUS_L();
   if ((US_B > southernWallFromMunitionButton) && (US_F < northObstacleThreshold)) {
     // Ensure that we are in the corner and well within the bounds of the armoury.
-    if (US_L > 7) {
+    if (US_L > westObstacleMunitionTreshold) {
       driveW();
       delay(500);  // blocking code. TO BE REPLACED.
     }
