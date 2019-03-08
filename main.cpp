@@ -120,7 +120,7 @@ IntervalTimer gate_timer;
 IntervalTimer end_game_timer;
 
 // Pin Assignments
-int gater_servo_pin = 1; // Servo motor that blocks balls from going through
+int gater_servo_pin = 7; // Servo motor that blocks balls from going through
 int shooter_enable1 = 2;
 int shooter_enable2 = 3;
 int pwmNorthSouth = 4; // The pwm pins for each h-bridge should be plugged into the same pwm pin
@@ -187,7 +187,7 @@ void setup() {
   ball_gater.attach(gater_servo_pin);
   ball_gater.write(15);
   end_game_timer.begin(shut_down, END_GAME_TIME);
-  delay(10000); //wait 10 secs
+  delay(3000); //wait 10 secs
   Serial.println("SETUP COMPLETE");
 
 }
@@ -195,20 +195,20 @@ void setup() {
 void loop() {
   
   //Readout of the Ultrasonic sensors
-  if (serial_print_timer.check()) {
+  // if (serial_print_timer.check()) {
     // int distance_F = readUS_F();
     // Serial.print("Front: ");
     // Serial.println(distance_F);
     // int distance_B = readUS_B();
     // Serial.print("Back: ");
     // Serial.println(distance_B);
-    int distance_R = readUS_R();
-    Serial.print("Right: ");
-    Serial.println(distance_R);
+    // int distance_R = readUS_R();
+    // Serial.print("Right: ");
+    // Serial.println(distance_R);
     // int distance_L = readUS_L();
     // Serial.print("Left: ");
     // Serial.println(distance_L);
-  }
+  // }
   //Drivetrain Testing
   /*
   driveW();
@@ -402,6 +402,8 @@ uint8_t testForNObstacle() {
   Serial.println(US_F);
   if (northSensorReadCount == REQ_SENSOR_READS) {
     double avg = totalNorthSensorReading / REQ_SENSOR_READS;
+    Serial.print("AVG READING NORTH: ");
+    Serial.println(avg);
     totalNorthSensorReading = 0;
     northSensorReadCount = 0;
     if (avg < northObstacleThreshold) {
@@ -506,6 +508,7 @@ void startShooter() {
   Serial.println("Open fire!");
   digitalWrite(shooter_enable1, HIGH);
   digitalWrite(shooter_enable2, HIGH);
+  delay(500);
   Serial.println("Starting Gate timer");
   gate_timer.begin(trigger_ball_gate, BALL_GATE_INTERVAL);
   Serial.println("Gate timer started");
@@ -535,10 +538,12 @@ void respToShooterTimer() {
 void trigger_ball_gate() {
   Serial.println("entered trigger_ball_gate");
   if (gate_state == 0) {
+    Serial.println("State = 0");
     ball_gater.write(15);
     gate_state = 1;
     gate_timer.update(BALL_GATE_INTERVAL);
   } else {
+    Serial.println("State = 1");
     ball_gater.write(35);
     gate_state = 0;
     gate_timer.update(SHOOTER_BALL_INTERVAL);
