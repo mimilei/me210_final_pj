@@ -65,16 +65,16 @@ void stopMotors();
 //Obstacle testing and response
 uint8_t testForWObstacle();
 void respToWObstacle();
-uint_8 westSensorReadCount = 0;
-uint8_t totalWestSensorReading = 0;
+uint8_t westSensorReadCount = 0;
+double totalWestSensorReading = 0;
 uint8_t testForNObstacle();
 void respToNObstacle();
 uint8_t northSensorReadCount = 0;
-uint8_t totalNorthSensorReading = 0;
+double totalNorthSensorReading = 0;
 uint8_t testForEObstacle();
 void respToEObstacle();
 uint8_t eastSensorReadCount = 0;
-uint8_t totalEastSensorReading = 0;
+double totalEastSensorReading = 0;
 uint8_t testForMunitionButton();
 void respToMunitionButton();
 //Crossroads testing and response
@@ -145,7 +145,7 @@ int stopSpeedMotor = 0;
 // Ultrasonic Sensor Obstacle Detection Parameters
 int northObstacleThreshold = 6;
 int eastObstacleThreshold = 4;
-int westObstacleThreshold = 4;
+int westObstacleThreshold = 2;
 int southernWallFromMunitionButton = 200;
 int westObstacleMunitionTreshold = 7;
 // TODO (letti): Add a south obstacle threshold just in case...
@@ -187,7 +187,7 @@ void setup() {
   ball_gater.attach(gater_servo_pin);
   ball_gater.write(15);
   end_game_timer.begin(shut_down, END_GAME_TIME);
-  delay(10000); //wait 3 secs
+  delay(10000); //wait 10 secs
   Serial.println("SETUP COMPLETE");
 
 }
@@ -196,18 +196,18 @@ void loop() {
   
   //Readout of the Ultrasonic sensors
   if (serial_print_timer.check()) {
-    /*int distance_F = readUS_F();
-    Serial.print("Front: ");
-    Serial.println(distance_F);
-    int distance_B = readUS_B();
-    Serial.print("Back: ");
-    Serial.println(distance_B);
+    // int distance_F = readUS_F();
+    // Serial.print("Front: ");
+    // Serial.println(distance_F);
+    // int distance_B = readUS_B();
+    // Serial.print("Back: ");
+    // Serial.println(distance_B);
     int distance_R = readUS_R();
     Serial.print("Right: ");
     Serial.println(distance_R);
-    int distance_L = readUS_L();
-    Serial.print("Left: ");
-    Serial.println(distance_L);*/
+    // int distance_L = readUS_L();
+    // Serial.print("Left: ");
+    // Serial.println(distance_L);
   }
   //Drivetrain Testing
   /*
@@ -363,7 +363,6 @@ void stopMotors(){
 uint8_t testForWObstacle() {
   //Serial.println("W Obstacle Tested");
   float US_L = readUS_L();
-  Serial.println(US_L);
   if (westSensorReadCount == REQ_SENSOR_READS) {
     double avg = totalWestSensorReading / REQ_SENSOR_READS;
     totalWestSensorReading = 0;
@@ -453,16 +452,6 @@ void respToEObstacle() {
   delay(100); //blocking code TODO
   driveE();
   delay(300); //blocking code TODO
-  // Back out of corner
-  stopMotors();
-  delay(100); //blocking code TODO
-  driveS();
-  delay(400); //blocking code TODO
-  stopMotors();
-  delay(100); //blocking code TODO
-  driveW();
-  delay(400); //blocking code TODO
-  //
   stopMotors();
   delay(100);
   sub_state = drivingS;
@@ -490,7 +479,7 @@ void respToMunitionButton() {
   stopMotors();
   delay(100); //to help with a clean transition
   driveS();
-  delay(500); //blocking code
+  delay(200); //blocking code
   state = stopped;
   Serial.println("Responding to Munition Button!");
 }
