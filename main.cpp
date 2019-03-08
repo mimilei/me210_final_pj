@@ -47,6 +47,8 @@ Nice to have:
 #define SERIAL_PRINT_INTERVAL 500
 // Game ends after 2 minutes and 10 seconds
 #define END_GAME_TIME 130000000
+// Min number of times to read from ultrasonic sensor to ensure consistency of reading
+#define REQ_SENSOR_READS 5.
 
 /*---------------Module Function Prototypes-----------------*/
 //Ultrasonic sensor read functions
@@ -63,10 +65,16 @@ void stopMotors();
 //Obstacle testing and response
 uint8_t testForWObstacle();
 void respToWObstacle();
+uint_8 westSensorReadCount = 0;
+uint8_t totalWestSensorReading = 0;
 uint8_t testForNObstacle();
 void respToNObstacle();
+uint8_t northSensorReadCount = 0;
+uint8_t totalNorthSensorReading = 0;
 uint8_t testForEObstacle();
 void respToEObstacle();
+uint8_t eastSensorReadCount = 0;
+uint8_t totalEastSensorReading = 0;
 uint8_t testForMunitionButton();
 void respToMunitionButton();
 //Crossroads testing and response
@@ -356,8 +364,20 @@ uint8_t testForWObstacle() {
   //Serial.println("W Obstacle Tested");
   float US_L = readUS_L();
   Serial.println(US_L);
-	if (US_L < westObstacleThreshold) return 1;
-  else return 0; 
+  if (westSensorReadCount == REQ_SENSOR_READS) {
+    double avg = totalWestSensorReading / REQ_SENSOR_READS;
+    totalWestSensorReading = 0;
+    westSensorReadCount = 0;
+    if (avg < westObstacleThreshold) {
+      return 1;
+    } else {
+      return 0; 
+    }
+  } else {
+    totalWestSensorReading += US_L;
+    westSensorReadCount++;
+    return 0;
+  }
 }
 
 void respToWObstacle() {
@@ -380,8 +400,21 @@ void respToWObstacle() {
 
 uint8_t testForNObstacle() {
   float US_F = readUS_F();
-	if (US_F < northObstacleThreshold) return 1;
-  else return 0;
+  Serial.println(US_F);
+  if (northSensorReadCount == REQ_SENSOR_READS) {
+    double avg = totalNorthSensorReading / REQ_SENSOR_READS;
+    totalNorthSensorReading = 0;
+    northSensorReadCount = 0;
+    if (avg < northObstacleThreshold) {
+      return 1;
+    } else {
+      return 0; 
+    }
+  } else {
+    totalNorthSensorReading += US_F;
+    northSensorReadCount++;
+    return 0;
+  }
 }
 
 void respToNObstacle() {
@@ -393,8 +426,21 @@ void respToNObstacle() {
 
 uint8_t testForEObstacle() {
   float US_R = readUS_R();
-	if (US_R < eastObstacleThreshold) return 1;
-  else return 0;
+  Serial.println(US_R);
+  if (eastSensorReadCount == REQ_SENSOR_READS) {
+    double avg = totalEastSensorReading / REQ_SENSOR_READS;
+    totalEastSensorReading = 0;
+    eastSensorReadCount = 0;
+    if (avg < eastObstacleThreshold) {
+      return 1;
+    } else {
+      return 0; 
+    }
+  } else {
+    totalEastSensorReading += US_R;
+    eastSensorReadCount++;
+    return 0;
+  }
 }
 void respToEObstacle() {
   Serial.println("E Obstacle Detected!");
