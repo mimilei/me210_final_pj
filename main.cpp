@@ -5,27 +5,18 @@
 
 /**
  * Welcome to the inner workings of the ***FIENDFYRE WARRIOR*** 
- * Last updated: 3/5/2019 at 18:42 by Amanda Steffy
+ * Last updated: 3/10/2019 at 12:47 by Amanda Steffy
  * */
 
 /*
-NOTES FROM LETTI'S TESTING:
-  - Fallen parts of Casterly rock are messing with our ulstrasonic senros.
-  If we hit the munition button at an angle the back sensor may see that 
-  instead of the back wall (which is currently part of our criteria for 
-  hitting the munition button). Potential solutions:
-    - Add a "WestObstacle" component to the "hit munition button" criteria.
-    And if US_F > US_R, move West, (and whatever else you'd need to do)
-- Enemy ammunition may cause similar problems (but that would involve a decent
-  amount of bad luck and is more than MVP).
-- My USB cable uploads code to the Teensy in ~2 s.  I'll put a sticky note
-  on it so Amanda doesn't waste any more significants portions of her life. ;)
-- The "middle of the board" state is broken. TBD why. --> a wire was hanging
-  down in front of the front US.  WE NEED CABLE MANAGEMENT!
-- Need to add a "west" component to the munition criteria. It needs to be in 
-  the armory and we have a tendacy to veer east when travelling north.
-    - "If US_L < 7, drive LEFT; else stop;"
-    - Done. Semi tested.
+NOTES FROM AMANDA'S UPDATES FOR THE COMPETITION:
+ - changed MUNITION_TIME_INTERVAL to be 3 seconds (load quickly!)
+ - updated testForCenter to check if US_F >= US_B - please test in case my sleepy brain did this backwards
+ - added King's Landing counter, armoury_visits that increments in respToMunitionButton. When this is greater than KINGS_LANDING_TRIES (defined as 2),
+    then it will turn while shooting. On even attempts, it will turn in one direction. On odd, it will turn in the opposite direction. The function to
+    compute even or odd is WRONG. I need to check this when I have internet. It should be the remainder of division by 2.
+ - need to update the pinouts to have the N and S motors on different PWM and dir pins
+ - the timing of shooting needs to be tested
 */
 
 /*
@@ -36,7 +27,7 @@ Nice to have:
 
 /*---------------Module Defines-----------------------------*/
 //Munition Loading Time
-#define MUNITION_TIME_INTERVAL 5000
+#define MUNITION_TIME_INTERVAL 3000
 //Shooting time for six wildfires
 #define SHOOTER_TIME_INTERVAL 8000
 // Time between ball releases
@@ -49,6 +40,10 @@ Nice to have:
 #define END_GAME_TIME 130000000
 // Min number of times to read from ultrasonic sensor to ensure consistency of reading
 #define REQ_SENSOR_READS 5.
+// Time after stopping the motors, in hopes of having a better-aligned turn
+#define STOP_MOTOR_INTERVAL 100
+// King's Landing attempts
+#define KINGS_LANDING_TRIES 2
 
 /*---------------Module Function Prototypes-----------------*/
 //Ultrasonic sensor read functions
@@ -110,6 +105,7 @@ Sub_states_t sub_state;
 static Metro munition_timer = Metro(MUNITION_TIME_INTERVAL);
 static Metro shooter_timer = Metro(SHOOTER_TIME_INTERVAL);
 static Metro serial_print_timer = Metro(SERIAL_PRINT_INTERVAL);
+static Metro stop_motor_delay = Metro(STOP_MOTOR_INTERVAL);
 
 // Shooter Objects
 Servo ball_gater;
@@ -152,6 +148,9 @@ int westObstacleMunitionTreshold = 7;
 
 long cm;
 
+//Initialize the number of King's Landing Attempts
+int armoury_visits = 0; 
+
 /*---------------WARRIOR Main Functions----------------*/
 void setup() {
   //Begin Serial Monitor
@@ -187,7 +186,7 @@ void setup() {
   ball_gater.attach(gater_servo_pin);
   ball_gater.write(15);
   end_game_timer.begin(shut_down, END_GAME_TIME);
-  delay(3000); //wait 10 secs
+  delay(3000); //wait
   Serial.println("SETUP COMPLETE");
 
 }
@@ -390,7 +389,6 @@ void respToWObstacle() {
   delay(100); //blocking code TODO
   driveW();
   delay(500); //blocking code TODO
-  // Back out of corner
   //
   stopMotors();
   delay(100);
@@ -482,13 +480,14 @@ void respToMunitionButton() {
   delay(100); //to help with a clean transition
   driveS();
   delay(200); //blocking code
+  armoury_visits++;
   state = stopped;
   Serial.println("Responding to Munition Button!");
 }
 uint8_t testForCenter() {
   float US_F = readUS_F();
 	float US_B = readUS_B();
-	if (US_F == US_B) return 1;
+	if (US_F >= US_B) return 1;
   else return 0;
 }
 void respToCenter() {
@@ -496,12 +495,31 @@ void respToCenter() {
   driveE(); //for better alignment, hit the E wall
   delay(300); //blocking code, but forces us into the E wall
   driveW(); //to back off the wall
-  delay(300); //blocking code. TODO
+  delay(300); //blocking code. TODO 
+  stopMotors(); 
   shooter_timer.reset();
   Serial.println("STARTING TO SHOOT");
-  state = shooting;
-  stopMotors();
-  startShooter();
+  int tries = KINGS_LANDING_TRIES/2; //what's the function to calculate the remainder?
+  if ((armoury_visits >= KINGS_LANDING_TRIES+1)&&(tries == 0)) {
+    state = shooting;
+    digitalWrite(dir_pin_1, HIGH); //UPDATE WITH NEW PINS
+    digitalWrite(dir_pin_2, LOW); //UPDATE WITH NEW PINS
+    analogWrite(pwmNorthSouth, maxSpeedMotor); //UPDATE WITH NEW PINS
+    analogWrite(pwmNorthSouth, -maxSpeedMotor); //UPDATE WITH NEW PINS
+    startShooter();
+  }
+  if ((armoury_visits >= KINGS_LANDING_TRIES+2)&&(tries == 1)) {
+    state = shooting;
+    digitalWrite(dir_pin_1, HIGH); //UPDATE WITH NEW PINS
+    digitalWrite(dir_pin_2, LOW); //UPDATE WITH NEW PINS
+    analogWrite(pwmNorthSouth, -maxSpeedMotor); //UPDATE WITH NEW PINS
+    analogWrite(pwmNorthSouth, maxSpeedMotor); //UPDATE WITH NEW PINS
+    startShooter();
+  }
+  else {
+    state = shooting;
+    startShooter();
+  }
 }
 void startShooter() {
   //TODO: test
